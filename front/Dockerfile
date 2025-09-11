@@ -1,50 +1,39 @@
-# Multi-stage build for React application
-FROM node:18-alpine AS base
-
-# Install dependencies only when needed
-FROM base AS deps
+# Estágio de desenvolvimento
+FROM node:20-alpine AS dev
 WORKDIR /app
 
-# Copy package files
+# Copia arquivos de dependências e instala
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install
 
-# Development stage
-FROM base AS dev
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-RUN npm ci
-
-# Copy source code
+# Copia código fonte
 COPY . .
 
-# Expose port
+# Expõe porta para desenvolvimento
 EXPOSE 5173
 
-# Start development server
+# Inicia servidor de desenvolvimento
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
-# Build stage
-FROM base AS builder
+# Estágio de build para produção
+FROM node:20-alpine AS production-build
 WORKDIR /app
 
-# Copy package files
+# Copia arquivos de dependências
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
-# Copy source code
+# Copia código fonte
 COPY . .
 
-# Build the application
+# Gera build da aplicação
 RUN npm run build
 
-# Production stage
+# Estágio final de produção
 FROM nginx:alpine AS production
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=production-build /app/dist /usr/share/nginx/html
 
-# Copy custom nginx config if needed
+# Copia configuração personalizada do nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80

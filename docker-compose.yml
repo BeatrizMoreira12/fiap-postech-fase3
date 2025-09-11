@@ -1,7 +1,6 @@
-version: '3.8'
 
 services:
-  # React development server
+  # Servidor de desenvolvimento React
   front:
     build:
       context: ./front
@@ -20,7 +19,7 @@ services:
     networks:
       - app-network
 
-  # Production build
+  # Build de produção
   front-prod:
     build:
       context: ./front
